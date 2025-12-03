@@ -23,6 +23,6 @@ func main() {
 	r.HandleFunc("/api/users/{id}", handlers.DeleteUserHandler).Methods("DELETE")
 	r.HandleFunc("/metrics", handlers.MetricsHandler).Methods("GET")
 
-	log.Println("Server starting on :8080")
+	utils.Logger.Println("Server starting on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }

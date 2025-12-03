@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"gohighload/models"
+	"gohighload/utils"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -19,13 +20,28 @@ func init() {
 		Secure: false,
 	})
 	if err != nil {
-		fmt.Printf("Failed to initialize MinIO client: %v\n", err)
+		utils.Logger.Printf("Failed to initialize MinIO client: %v\n", err)
+		return
+	}
+	ctx := context.Background()
+	exists, errBucket := minioClient.BucketExists(ctx, "notifications")
+	if errBucket != nil {
+		utils.Logger.Printf("Error checking bucket: %v\n", errBucket)
+		return
+	}
+	if !exists {
+		err = minioClient.MakeBucket(ctx, "notifications", minio.MakeBucketOptions{})
+		if err != nil {
+			utils.Logger.Printf("Failed to create bucket: %v\n", err)
+		} else {
+			utils.Logger.Printf("Created bucket 'notifications'\n")
+		}
 	}
 }
 
 func LogUserAction(action string, userID int) {
 	go func() {
-		fmt.Printf("Audit Log: %s for user ID %d\n", action, userID)
+		utils.Logger.Printf("Audit Log: %s for user ID %d\n", action, userID)
 	}()
 }
 
@@ -37,9 +53,9 @@ func SendNotification(user models.User, action string) {
 		reader := bytes.NewReader([]byte(message))
 		_, err := minioClient.PutObject(context.Background(), bucketName, objectName, reader, int64(len(message)), minio.PutObjectOptions{ContentType: "text/plain"})
 		if err != nil {
-			fmt.Printf("Failed to upload to MinIO: %v\n", err)
+			utils.Logger.Printf("Failed to upload to MinIO: %v\n", err)
 		} else {
-			fmt.Printf("Uploaded notification to MinIO: %s\n", objectName)
+			utils.Logger.Printf("Uploaded notification to MinIO: %s\n", objectName)
 		}
 	}()
 }

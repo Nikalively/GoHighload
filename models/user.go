@@ -13,8 +13,13 @@ type User struct {
 }
 
 func (u *User) Validate() error {
-	if strings.TrimSpace(u.Name) == "" {
+	u.Name = strings.TrimSpace(u.Name)
+	if u.Name == "" {
 		return errors.New("name is required")
+	}
+	u.Email = strings.TrimSpace(u.Email)
+	if u.Email == "" {
+		return errors.New("email is required")
 	}
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !emailRegex.MatchString(u.Email) {
